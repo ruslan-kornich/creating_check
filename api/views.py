@@ -1,10 +1,11 @@
 from django.db import transaction
+from django.http import FileResponse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Check, Printer
-from .serializers import OrderSerializer
+from .serializers import OrderSerializer, CheckSerializer
 from .services import create_checks
 
 
@@ -19,7 +20,7 @@ class OrdersAPIView(APIView):
         if checks:
             return Response(
                 {
-                'error': 'Чеки для цього замовлення були раніше створені'
+                    'error': 'Чеки для цього замовлення були раніше створені'
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
@@ -53,3 +54,53 @@ class OrdersAPIView(APIView):
         return Response(
             {'OK': 'Чеки успішно створені'}, status=status.HTTP_200_OK
         )
+
+
+class ChecksAPIView(APIView):
+    """Клас передачі id згенерованого чека за ключом api_key."""
+
+    def get(self, format=None):
+        api_key = self.request.query_params.get('api_key')
+        printer = Printer.objects.filter(api_key=api_key).first()
+        if not printer:
+            return Response(
+                {'error': 'Помилка авторизації'}, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        checks = Check.objects.filter(printer=printer, status='rendered')
+        return Response(
+            {"checks": CheckSerializer(checks, many=True).data}, status=status.HTTP_200_OK
+        )
+
+
+class PDFCheckAPIView(APIView):
+    """Клас передачі pdf-файлу за параметрами api_key та id чека."""
+
+    def get(self, format=None):
+        api_key = self.request.query_params.get('api_key')
+        check_id = self.request.query_params.get('check_id')
+
+        if not check_id.isdigit():
+            return Response(
+                {'error': 'Неправильний номер замовлення'}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        printer = Printer.objects.filter(api_key=api_key).first()
+        if not printer:
+            return Response(
+                {'error': 'Помилка авторизації'}, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        check = Check.objects.filter(pk=check_id, printer=printer).first()
+        if not check:
+            return Response(
+                {'error': 'Даного чека не існує'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        elif not check.status == 'rendered':
+            return Response(
+                {'error': 'Для цього чека не згенеровано PDF-файл'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        pdf_file = check.pdf_file.open()
+        return FileResponse(pdf_file, content_type='application/pdf')
