@@ -1,19 +1,30 @@
+from django.core.validators import FileExtensionValidator
 from django.db import models
 
 
 class Printer(models.Model):
-    name = models.CharField(verbose_name='Назва принтера',
-                            max_length=200,
-                            unique=False,
-                            )
-    api_key = models.CharField(verbose_name='Ключ доступу до API',
-                               max_length=250,
-                               unique=True,
-                               blank=False,
-                               null=False, )
-    check_type = models.CharField(verbose_name='Тип чека який друкує принтер',
-                                  max_length=50, )
-    point_id = models.IntegerField(verbose_name="Точка до якої прив'язаний принтер")
+    """Модель принтера"""
+    CHECK_TYPE = (
+        ('kitchen', 'Кухня'),
+        ('client', 'Клієнт'),
+    )
+
+    name = models.CharField(max_length=255,
+                            verbose_name='Назва принтера')
+    api_key = models.CharField(max_length=255,
+                               verbose_name='ключ доступу до API'
+                               )
+    check_type = models.CharField(choices=CHECK_TYPE,
+                                  max_length=7,
+                                  default='kitchen',
+                                  verbose_name='Тип чека, який друкує принтер')
+    point_id = models.IntegerField(db_index=True,
+                                   null=False,
+                                   blank=False,
+                                   verbose_name="Точки, до яких прив'язані принтери")
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         verbose_name = 'Принтер'
@@ -21,22 +32,37 @@ class Printer(models.Model):
 
 
 class Check(models.Model):
-    printer_id = models.ForeignKey(Printer,
-                                   verbose_name='Принтер',
-                                   on_delete=models.CASCADE,
-                                   related_name='checks', )
-    defined_type = models.CharField(verbose_name='Тип чеку',
-                                    max_length=50)
+    """Модель чека"""
+    CHECK_TYPE = (
+        ('kitchen', 'Кухня'),
+        ('client', 'Клієнт'),
+    )
+    STATUS = (
+        ('new', 'Новий'),
+        ('rendered', 'Відображений'),
+        ('printed', 'Роздрукований'),
+    )
+
+    printer = models.ForeignKey(Printer,
+                                on_delete=models.CASCADE,
+                                related_name='check_model',
+                                verbose_name='Принтер')
+    type = models.CharField(choices=CHECK_TYPE,
+                            max_length=7,
+                            default='kitchen',
+                            verbose_name='Тип чека'
+                            )
     order = models.JSONField(verbose_name='Інформація про замовлення')
-    status = models.CharField(verbose_name='Статус чеку',
-                              max_length=50
-                              )
-    pdf_file = models.FileField(verbose_name='PDF-файл',
-                                max_length=5000,
-                                upload_to='',
+    status = models.CharField(choices=STATUS,
+                              max_length=8,
+                              default='new',
+                              verbose_name='Статус чека')
+    pdf_file = models.FileField(upload_to='pdf/',
+                                verbose_name='Посилання на створений PDF-файл',
                                 blank=True,
-                                null=True,
-                                )
+                                validators=[
+                                    FileExtensionValidator(allowed_extensions=['pdf', ])
+                                ])
 
     class Meta:
         verbose_name = 'Чек'

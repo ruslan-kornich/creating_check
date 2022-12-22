@@ -52,7 +52,7 @@ ROOT_URLCONF = 'сreating_check.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -116,4 +116,17 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REST_FRAMEWORK = { 'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema' }
+REST_FRAMEWORK = {'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'}
+
+RQ_QUEUES = {
+    'default': {
+        'HOST': env('HOST'),
+        'PORT': env('PORT'),
+        'DB': env('RQ_DB'),
+        'PASSWORD': env('RQ_PASSWORD'),
+        'DEFAULT_TIMEOUT': env('RQ_DEFAULT_TIMEOUT'),
+    }
+}
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
