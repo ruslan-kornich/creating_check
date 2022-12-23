@@ -27,7 +27,7 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-Запустите django-rq:
+Запустите django-rq в окремому  вiкнi термiналу:
 ```bash
 python manage.py rqworker default
 ```
