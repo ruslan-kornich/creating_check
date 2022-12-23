@@ -74,33 +74,36 @@ class ChecksAPIView(APIView):
 
 
 class PDFCheckAPIView(APIView):
-    """Клас передачі pdf-файлу за параметрами api_key та id чека."""
+    """Клас передачі pdf-файлу за параметрами api_key та id чека"""
 
     def get(self, format=None):
+
         api_key = self.request.query_params.get('api_key')
         check_id = self.request.query_params.get('check_id')
+        print(check_id)
+        print(api_key)
 
-        if not check_id.isdigit():
-            return Response(
-                {'error': 'Неправильний номер замовлення'}, status=status.HTTP_400_BAD_REQUEST
-            )
+        if check_id == None or check_id.isdigit():
+            printer = Printer.objects.filter(api_key=api_key).first()
+            if not printer:
+                return Response(
+                    {'error': 'Помилка авторизації'}, status=status.HTTP_401_UNAUTHORIZED
+                )
 
-        printer = Printer.objects.filter(api_key=api_key).first()
-        if not printer:
-            return Response(
-                {'error': 'Помилка авторизації'}, status=status.HTTP_401_UNAUTHORIZED
-            )
+            check = Check.objects.filter(pk=check_id, printer=printer).first()
+            if not check:
+                return Response(
+                    {'error': 'Даного чека не існує'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            elif not check.status == 'rendered':
+                return Response(
+                    {'error': 'Для цього чека не згенеровано PDF-файл'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            pdf_file = check.pdf_file.open()
+            return FileResponse(pdf_file, content_type='application/pdf')
 
-        check = Check.objects.filter(pk=check_id, printer=printer).first()
-        if not check:
-            return Response(
-                {'error': 'Даного чека не існує'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        elif not check.status == 'rendered':
-            return Response(
-                {'error': 'Для цього чека не згенеровано PDF-файл'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        pdf_file = check.pdf_file.open()
-        return FileResponse(pdf_file, content_type='application/pdf')
+        return Response(
+            {'error': 'Даного чека не існує'}, status=status.HTTP_400_BAD_REQUEST
+        )
