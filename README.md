@@ -19,9 +19,6 @@ pip install -r requirements.txt
 ```bash
 sudo docker compose up -d --build
 ```
-Создайте .env файл с переменными окружения:
-
-
 
 Застосуйте міграції та створіть суперюзера:
 ```bash
