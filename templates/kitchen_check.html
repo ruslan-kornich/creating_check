@@ -15,14 +15,21 @@
         body {
             width: 210mm;
             font-size: 14px;
-            height: 344mm;
+            height: 297mm;
         }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="row">
-        <h2 class="col col-3">{{ id }}</h2>
+        <h2 class="col col-3">№ {{ id }}</h2>
+        <h3 class="col col-6">{{ address }}</h3>
+        <div class="col col-3">
+            <ul class="list-unstyled">
+                <li class="font-weight-bold">{{ client.name }}</li>
+                <li>{{ client.phone }}</li>
+            </ul>
+        </div>
     </div>
     <div class="row">
         <table class="table" width="830px">
@@ -33,7 +40,6 @@
                 <th>Ціна за одиницю</th>
             </tr>
             </thead>
-            <tbody>
             {% for item in items %}
                 <tr>
                     <td>{{ item.name }}</td>
@@ -49,6 +55,8 @@
             </tbody>
         </table>
     </div>
+</div>
+
 </div>
 </body>
 </html>

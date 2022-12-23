@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'api',
     'rest_framework',
+    'django_rq',
 ]
 
 MIDDLEWARE = [
@@ -71,10 +72,7 @@ WSGI_APPLICATION = 'сreating_check.wsgi.application'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    'default': env.db(),
 }
 
 # Password validation
@@ -120,12 +118,20 @@ REST_FRAMEWORK = {'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSc
 
 RQ_QUEUES = {
     'default': {
-        'HOST': env('HOST'),
-        'PORT': env('PORT'),
+        'HOST': env('RQ_HOST'),
+        'PORT': env('RQ_PORT'),
         'DB': env('RQ_DB'),
-        'PASSWORD': env('RQ_PASSWORD'),
         'DEFAULT_TIMEOUT': env('RQ_DEFAULT_TIMEOUT'),
     }
+}
+
+RQ_QUEUES = {
+    'default': {
+        'HOST': 'localhost',
+        'PORT': 1400,
+        'DB': 0,
+        'DEFAULT_TIMEOUT': 360,
+    },
 }
 
 MEDIA_URL = '/media/'

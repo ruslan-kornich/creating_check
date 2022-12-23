@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+
+    db:
+      image: postgres:latest
+      container_name: db
+      environment:
+      - POSTGRES_PASSWORD=django
+      - POSTGRES_USER=django
+      - POSTGRES_DB=checker
+      volumes:
+        - postgres_data:/var/lib/postgresql/data/
+      ports:
+        - "32700:5432"
+      restart: always
+      env_file:
+        - .env
+
+
+    wkhtmltopdf:
+      image: openlabs/docker-wkhtmltopdf-aas:latest
+      ports:
+        - "55000:80"
+      restart: always
+
+    redis:
+      image: redis:latest
+      ports:
+        - "1400:6379"
+      restart: always
+volumes:
+  postgres_data:
